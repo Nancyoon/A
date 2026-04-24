@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>订单查询系统 </title>
+   <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        body {
+            background: radial-gradient(circle at 20% 30%, #f0f4ff, #e6ecf8);
+            min-height: 100vh;
+            padding: 24px;
+            color: #1e1e2f;
+            position: relative;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: -10vh;
+            left: -10vw;
+            width: 60vw;
+            height: 60vh;
+            background: radial-gradient(circle, rgba(180, 210, 255, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::after {
+            content: "";
+            position: fixed;
+            bottom: -10vh;
+            right: -10vw;
+            width: 70vw;
+            height: 70vh;
+            background: radial-gradient(circle, rgba(220, 230, 255, 0.25) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 5;
+        }
+        .front-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.3);
+            padding: 12px 24px;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 30px -10px rgba(0, 20, 50, 0.1);
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #1e2b5e, #2c3a6b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(70, 100, 200, 0.1);
+        }
+        .admin-link {
+            font-size: 0.95rem;
+            color: #2c3a6b;
+            cursor: pointer;
+            background: rgba(255,255,255,0.5);
+            padding: 8px 18px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.8);
+            font-weight: 500;
+            transition: all 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+        }
+        .admin-link:hover {
+            background: rgba(255,255,255,0.8);
+            border-color: #a0bbdf;
+            box-shadow: 0 8px 14px -6px rgba(50,80,150,0.2);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-radius: 36px;
+            padding: 28px 32px;
+            box-shadow: 0 20px 40px -12px rgba(0, 20, 50, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+            margin-bottom: 32px;
+            border: 1px solid rgba(255,255,255,0.7);
+            transition: box-shadow 0.2s ease;
+        }
+        .card:hover {
+            box-shadow: 0 24px 48px -14px rgba(30, 60, 130, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 22px;
+            color: #1a2849;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.01em;
+        }
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px 24px;
+            align-items: flex-end;
+        }
+        @media (min-width: 900px) {
+            .flex-row {
+                flex-wrap: nowrap;
+            }
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 0%;
+            min-width: 200px;
+        }
+        .input-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #3e4e6b;
+            margin-bottom: 8px;
+        }
+        .input-group input {
+            padding: 12px 18px;
+            border: 1.5px solid rgba(255,255,255,0.8);
+            border-radius: 30px;
+            font-size: 0.95rem;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(4px);
+            transition: all 0.2s;
+            color: #0b1a2f;
+            font-weight: 450;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            width: 100%;
+        }
+        .input-group input:focus {
+            border-color: #3a6ab5;
+            outline: none;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 8px 18px -8px rgba(58,106,181,0.3), 0 0 0 3px rgba(58,106,181,0.1);
+        }
+        button {
+            background: rgba(30, 60, 120, 0.85);
+            backdrop-filter: blur(8px);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 12px 28px;
+            border-radius: 60px;
+            font-weight: 550;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 8px 16px -6px rgba(20, 50, 100, 0.25);
+            transition: all 0.2s;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .flex-row > button {
+            min-width: 90px;
+            text-align: center;
+        }
+        button:hover {
+            background: #1e3c70;
+            transform: translateY(-2px);
+            box-shadow: 0 16px 24px -8px rgba(20, 70, 140, 0.3);
+            border-color: rgba(255,255,255,0.9);
+        }
+        button.secondary {
+            background: rgba(255,255,255,0.4);
+            backdrop-filter: blur(8px);
+            color: #1e2f4a;
+            border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 4px 10px -4px rgba(0,0,0,0.05);
+        }
+        button.secondary:hover {
+            background: rgba(255,255,255,0.7);
+            color: #0a1a2f;
+        }
+        button.small {
+            padding: 8px 18px;
+            font-size: 0.85rem;
+        }
+        button.danger {
+            background: rgba(200, 60, 60, 0.85);
+            border-color: rgba(255,200,200,0.5);
+        }
+        button.danger:hover {
+            background: #b03030;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 24px;
+            border-radius: 28px;
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 8px 20px -8px rgba(0,0,0,0.05);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            min-width: 800px;
+        }
+        th {
+            text-align: left;
+            padding: 18px 16px;
+            background: rgba(240, 245, 255, 0.5);
+            color: #1f2e4e;
+            font-weight: 600;
+            border-bottom: 1.5px solid rgba(100,130,180,0.2);
+            white-space: nowrap;
+            backdrop-filter: blur(4px);
+        }
+        td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(150,170,200,0.15);
+            vertical-align: middle;
+            white-space: nowrap;
+            color: #1a273f;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover td {
+            background: rgba(255,255,255,0.3);
+        }
+        .badge {
+            background: rgba(70, 100, 180, 0.15);
+            backdrop-filter: blur(4px);
+            color: #1f3a6b;
+            padding: 6px 14px;
+            border-radius: 60px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.4);
+            white-space: nowrap;
+        }
+        .total-score {
+            background: rgba(70, 120, 200, 0.15);
+            backdrop-filter: blur(8px);
+            padding: 16px 28px;
+            border-radius: 60px;
+            font-weight: 650;
+            margin: 20px 0 16px;
+            display: inline-block;
+            border: 1px solid rgba(255,255,255,0.5);
+            color: #10345e;
+            box-shadow: 0 6px 14px -8px rgba(0,0,0,0.1);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .action-buttons > button {
+            flex-shrink: 0;
+        }
+        .action-buttons .badge {
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        #adminPanel {
+            display: none;
+            margin-top: 20px;
+        }
+        .admin-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 20, 40, 0.3);
+            backdrop-filter: blur(12px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px) saturate(200%);
+            width: 90%;
+            max-width: 860px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border-radius: 48px;
+            padding: 32px 36px;
+            box-shadow: 0 40px 70px -20px rgba(0,20,70,0.4), 0 0 0 1px rgba(255,255,255,0.8) inset;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 22px 24px;
+        }
+        .full-width {
+            grid-column: span 2;
+        }
+        .modal-footer {
+            margin-top: 36px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+        }
+        .file-import-area {
+            margin-top: 18px;
+            padding: 18px 20px;
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(8px);
+            border-radius: 32px;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .note {
+            color: #3f5270;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 30, 50, 0.8);
+            backdrop-filter: blur(12px);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 60px;
+            font-weight: 500;
+            box-shadow: 0 20px 35px -8px rgba(0,0,0,0.3);
+            z-index: 2500;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .toast.show { opacity: 1; }
+        .warning-badge {
+            background: rgba(240, 180, 80, 0.2);
+            backdrop-filter: blur(4px);
+            color: #8a5e1c;
+            padding: 4px 14px;
+            border-radius: 60px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-left: 14px;
+            border: 1px solid rgba(255,215,120,0.5);
+        }
+        .sort-controls {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+        .sort-btn {
+            padding: 8px 24px;
+            border-radius: 60px;
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.6);
+            color: #1a2c4a;
+            font-weight: 500;
+            font-size: 0.9rem;
+            box-shadow: none;
+        }
+        .sort-btn.active {
+            background: #1e3c70;
+            color: white;
+            border-color: #aac4f0;
+            box-shadow: 0 8px 14px -6px #1e3c7040;
+        }
+        .sort-direction {
+            margin-left: 8px;
+            font-size: 1rem;
+        }
+        @media (max-width: 600px) {
+            .card { padding: 20px 18px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+            .flex-row > button { width: 100%; }
+        }
+    </style>
+    <!-- 引入 Supabase 客户端 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="container">
+    <div class="front-header">
+        <h1>订单查询系统</h1>
+        <span class="admin-link" id="showAdminLink">🔐 后台管理</span>
+    </div>
+
+    <!-- 购买信息查询 -->
+    <div class="card">
+        <h2>🔍 购买信息查询 <span class="warning-badge">商品名 + QQ 必填</span></h2>
+        <div class="flex-row">
+            <div class="input-group"><label>商品名（模糊）*</label><input type="text" id="searchProduct" placeholder="例：XXX"></div>
+            <div class="input-group"><label>QQ号（精确）*</label><input type="text" id="searchQQ" placeholder="例：123456789"></div>
+            <button id="searchBtn">查询</button>
+            <button class="secondary" id="clearSearchBtn">清空</button>
+        </div>
+        <div id="searchResultArea" class="table-wrapper"><p style="padding:20px; color:#405570;">👆 输入商品名和QQ后查询</p></div>
+    </div>
+
+    <!-- 个人记录 -->
+    <div class="card">
+        <h2>👤 个人购买记录 · 积分汇总</h2>
+        <div class="flex-row">
+            <div class="input-group"><label>QQ号（精确）</label><input type="text" id="personalQQ" placeholder="输入QQ"></div>
+            <button id="personalSearchBtn">查看记录</button>
+        </div>
+        <!-- 修改处：将 padding 统一为 20px，与查询区域一致 -->
+        <div id="personalResultArea"><p style="padding:20px; color:#405570;">输入QQ号查询</p></div>
+    </div>
+
+    <!-- 后台管理 -->
+    <div id="adminPanel">
+        <div class="admin-bar">
+            <h2 style="margin-bottom:0;">⚙️ 订单管理 · 实时编辑</h2>
+            <button class="secondary small" id="hideAdminBtn">← 返回前台</button>
+        </div>
+        <div class="card" style="padding: 28px;">
+            <div class="action-buttons">
+                <button id="addOrderBtn">新增</button>
+                <button class="secondary" id="batchImportBtn">批量导入</button>
+                <button class="secondary" id="resetSampleBtn">重置示例</button>
+                <span class="badge" id="orderCount">0 条</span>
+            </div>
+            <div class="sort-controls">
+                <span style="color:#2e405e; font-weight:500;">排序：</span>
+                <button class="sort-btn" id="sortByNameBtn">📦 商品名称 <span id="nameSortDir" class="sort-direction"></span></button>
+                <button class="sort-btn" id="sortByTimeBtn">📅 创建时间 <span id="timeSortDir" class="sort-direction"></span></button>
+            </div>
+            <div id="importPanel" class="file-import-area" style="display:none;">
+                <div style="display:flex; gap:12px; align-items:center;"><label>CSV (UTF-8,14列):</label> <input type="file" id="csvFileInput" accept=".csv,.txt"> <button class="small secondary" id="cancelImport">取消</button></div>
+                <div class="note">列顺序: 商品,店铺,分类,单价,积分,次数,售出时间,订单编号,平台ID,QQ,UID,渠道,使用方式,被赞助人</div>
+            </div>
+            <div class="table-wrapper">
+                <table id="adminOrderTable">
+                    <thead><tr><th>商品</th><th>店铺</th><th>分类</th><th>单价</th><th>积分</th><th>QQ</th><th>平台ID</th><th>渠道</th><th>操作</th></tr></thead>
+                    <tbody id="adminTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 密码验证 -->
+    <div class="modal" id="passwordModal">
+        <div class="modal-card" style="max-width:440px">
+            <h3 style="margin-bottom:28px; color:#162b4a;">🔒 身份验证</h3>
+            <div class="input-group"><label>管理密码</label><input type="password" id="adminPassword" placeholder="••••••••" autocomplete="off"></div>
+            <div class="modal-footer" style="margin-top:32px;"><button class="secondary" id="cancelPwdBtn">取消</button><button id="confirmPwdBtn">验证进入</button></div>
+            <p class="note" style="text-align:center; margin-top:20px;">请输入密码</p>
+        </div>
+    </div>
+
+    <!-- 编辑模态框 -->
+    <div class="modal" id="orderModal">
+        <div class="modal-card">
+            <div class="modal-header"><h3 id="modalTitle" style="color:#162b4a;">编辑订单</h3><button class="secondary small" id="closeModalBtn">✕</button></div>
+            <form onsubmit="return false;">
+                <div class="form-grid">
+                    <div class="input-group"><label>商品</label><input id="editProduct" required></div><div class="input-group"><label>店铺</label><input id="editShop"></div>
+                    <div class="input-group"><label>分类</label><input id="editCategory"></div><div class="input-group"><label>单价</label><input id="editPrice" type="number" step="0.01"></div>
+                    <div class="input-group"><label>积分</label><input id="editPoints" type="number"></div><div class="input-group"><label>次数</label><input id="editTimes" type="number" value="1"></div>
+                    <div class="input-group"><label>售出时间</label><input id="editSellTime" placeholder="2025/07/14 20:28:18"></div>
+                    <div class="input-group"><label>订单编号</label><input id="editOrderId"></div>
+                    <div class="input-group"><label>平台ID</label><input id="editPlatformId"></div>
+                    <div class="input-group"><label>QQ</label><input id="editQQ"></div>
+                    <div class="input-group"><label>UID</label><input id="editUID"></div>
+                    <div class="input-group"><label>购买渠道</label><input id="editChannel"></div>
+                    <div class="input-group"><label>使用方式</label><input id="editUsage" value="自用"></div>
+                    <div class="input-group full-width"><label>被赞助人信息</label><input id="editSponsored"></div>
+                </div>
+                <input type="hidden" id="editIndex" value="-1">
+            </form>
+            <div class="modal-footer"><button class="secondary" id="cancelModalBtn">取消</button><button id="saveOrderBtn">保存订单</button></div>
+        </div>
+    </div>
+    <div id="toast" class="toast">数据已同步</div>
+</div>
+
+<script>
+    (function() {
+        // ---------- 你的 Supabase 配置 ----------
+        const supabaseUrl = 'https://hevvobetmygsdqlplila.supabase.co/rest/v1/';
+        const supabaseKey = 'sb_publishable_U2yD1Mx3y2rg7hjU7qB7OQ_qlLMrnPk';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        const SAMPLE = [ 
+  ["","","",10,10,1,"","","","","","","",""]
+];
+
+        let orders = [];
+        let sortField = 'name';
+        let sortAscending = true;
+        // toast、escape 等辅助函数不变
+
+        // 从 Supabase 加载数据
+        async function load() {
+            let { data, error } = await supabase
+                .from('orders')
+                .select('*')
+                .order('id', { ascending: true });
+            if (error) { console.error('加载失败', error); orders = []; }
+            else orders = data;
+        }
+
+        // 获取排序后的数组
+        function getSortedOrders() {
+            let arr = [...orders];
+            if (sortField === 'name') {
+                arr.sort((a,b) => sortAscending ? a.product.localeCompare(b.product) : b.product.localeCompare(a.product));
+            } else {
+                arr.sort((a,b) => {
+                    let ta = a.sell_time || '', tb = b.sell_time || '';
+                    if(!ta && !tb) return 0;
+                    if(!ta) return 1; if(!tb) return -1;
+                    return sortAscending ? ta.localeCompare(tb) : tb.localeCompare(ta);
+                });
+            }
+            return arr;
+        }
+
+        function renderAdmin() {
+            let tb = document.getElementById('adminTableBody');
+            let sorted = getSortedOrders();
+            let h = '';
+            sorted.forEach(o => {
+                h += `<tr>
+                    <td>${escape(o.product)}</td><td>${escape(o.shop)}</td><td>${escape(o.category)}</td>
+                    <td>${o.unit_price}</td><td>${o.points}</td><td>${escape(o.qq)}</td>
+                    <td>${escape(o.platform_id)}</td><td>${escape(o.channel)}</td>
+                    <td class="action-buttons">
+                        <button class="small secondary" data-edit="${o.id}">✏️</button>
+                        <button class="small danger" data-del="${o.id}">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+            tb.innerHTML = h || '<tr><td colspan="9" style="text-align:center;padding:24px;">暂无订单</td></tr>';
+            document.getElementById('orderCount').textContent = orders.length + ' 条';
+            updateSortUI();
+        }
+
+        // 查询功能的 performSearch 和 performPersonal 使用 orders 数组，无需改动，因为 orders 已经从 Supabase 加载
+
+        // 打开编辑/新增窗口
+        function openModal(order = null) {
+            if (order) {
+                document.getElementById('editProduct').value = order.product || '';
+                document.getElementById('editShop').value = order.shop || '';
+                document.getElementById('editCategory').value = order.category || '';
+                document.getElementById('editPrice').value = order.unit_price || 0;
+                document.getElementById('editPoints').value = order.points || 0;
+                document.getElementById('editTimes').value = order.times || 1;
+                document.getElementById('editSellTime').value = order.sell_time || '';
+                document.getElementById('editOrderId').value = order.order_id || '';
+                document.getElementById('editPlatformId').value = order.platform_id || '';
+                document.getElementById('editQQ').value = order.qq || '';
+                document.getElementById('editUID').value = order.uid || '';
+                document.getElementById('editChannel').value = order.channel || '';
+                document.getElementById('editUsage').value = order.usage || '自用';
+                document.getElementById('editSponsored').value = order.sponsored_info || '';
+                document.getElementById('editIndex').value = order.id; // 存数据库 id
+                document.getElementById('modalTitle').textContent = '✏️ 编辑订单';
+            } else {
+                // 清空
+                document.getElementById('editProduct').value = '';
+                document.getElementById('editShop').value = '';
+                document.getElementById('editCategory').value = '';
+                document.getElementById('editPrice').value = 10;
+                document.getElementById('editPoints').value = 10;
+                document.getElementById('editTimes').value = 1;
+                document.getElementById('editSellTime').value = '';
+                document.getElementById('editOrderId').value = '';
+                document.getElementById('editPlatformId').value = '';
+                document.getElementById('editQQ').value = '';
+                document.getElementById('editUID').value = '';
+                document.getElementById('editChannel').value = '';
+                document.getElementById('editUsage').value = '自用';
+                document.getElementById('editSponsored').value = '';
+                document.getElementById('editIndex').value = '-1';
+                document.getElementById('modalTitle').textContent = '➕ 新增订单';
+            }
+            modal.style.display = 'flex';
+        }
+
+        async function saveOrder() {
+            const idx = document.getElementById('editIndex').value;
+            const obj = {
+                product: document.getElementById('editProduct').value.trim(),
+                shop: document.getElementById('editShop').value.trim(),
+                category: document.getElementById('editCategory').value.trim(),
+                unit_price: +document.getElementById('editPrice').value || 0,
+                points: +document.getElementById('editPoints').value || 0,
+                times: +document.getElementById('editTimes').value || 1,
+                sell_time: document.getElementById('editSellTime').value.trim(),
+                order_id: document.getElementById('editOrderId').value.trim(),
+                platform_id: document.getElementById('editPlatformId').value.trim(),
+                qq: document.getElementById('editQQ').value.trim(),
+                uid: document.getElementById('editUID').value.trim(),
+                channel: document.getElementById('editChannel').value.trim(),
+                usage: document.getElementById('editUsage').value.trim(),
+                sponsored_info: document.getElementById('editSponsored').value.trim()
+            };
+            if (!obj.product) { alert('商品名必填'); return; }
+            if (idx === '-1') {
+                let { error } = await supabase.from('orders').insert([obj]);
+                if (error) alert('新增失败: ' + error.message);
+            } else {
+                let { error } = await supabase.from('orders').update(obj).eq('id', idx);
+                if (error) alert('更新失败: ' + error.message);
+            }
+            await load(); renderAdmin(); refreshFrontQueries();
+            showToast('订单已保存，前台已同步'); closeModal();
+        }
+
+        async function deleteOrder(id) {
+            if (!id) return;
+            let { error } = await supabase.from('orders').delete().eq('id', id);
+            if (error) { alert('删除失败: ' + error.message); return; }
+            await load(); renderAdmin(); refreshFrontQueries();
+            showToast('订单已删除');
+        }
+
+        async function resetSample() {
+            await supabase.from('orders').delete().neq('id', 0);
+            const objs = SAMPLE.map(rowToObj);
+            let { error } = await supabase.from('orders').insert(objs);
+            if (error) alert('重置失败: ' + error.message);
+            else { await load(); renderAdmin(); refreshFrontQueries(); showToast('已重置示例数据'); }
+        }
+
+        async function importCSV(file) {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const lines = e.target.result.split(/\r?\n/).filter(l=>l.trim());
+                let objs = [];
+                lines.forEach(line => {
+                    const cols = parseCSV(line);
+                    if (cols.length >= 14) objs.push(rowToObj(cols.slice(0,14)));
+                });
+                if (objs.length) {
+                    let { error } = await supabase.from('orders').insert(objs);
+                    if (error) alert('导入失败: ' + error.message);
+                    else { await load(); renderAdmin(); refreshFrontQueries(); showToast(`导入 ${objs.length} 条`); }
+                }
+                document.getElementById('importPanel').style.display = 'none';
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        // 实时监听
+        supabase
+            .channel('orders-room')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
+                load().then(() => { renderAdmin(); refreshFrontQueries(); });
+            })
+            .subscribe();
+
+        // 页面加载
+        window.addEventListener('DOMContentLoaded', async () => {
+            await load();
+            renderAdmin();
+            // 所有事件绑定和原来一样（需要微调几个地方）
+            document.getElementById('searchBtn').addEventListener('click', performSearch);
+            // ... 其余绑定一样
+            // 修改点：后台表格点击事件改用 id
+            document.getElementById('adminTableBody').addEventListener('click', async (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const editId = btn.dataset.edit, delId = btn.dataset.del;
+                if (editId) {
+                    const order = orders.find(o => o.id == editId);
+                    if (order) openModal(order);
+                } else if (delId) {
+                    if (confirm('删除？')) await deleteOrder(delId);
+                }
+            });
+            // 重置示例按钮
+            document.getElementById('resetSampleBtn').addEventListener('click', resetSample);
+            // 可以删除原来的 save() 相关逻辑
+        });
+    })();
+</script>
+</body>
+</html>
